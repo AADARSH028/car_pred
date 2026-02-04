@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Price Predictor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1><i class="fas fa-car-side"></i> Car Price Predictor</h1>
+                <p>Enter the details to estimate the price of your car</p>
+            </div>
+            <div class="card-body">
+                <form method="post" accept-charset="utf-8" name="Modelform" id="prediction-form"
+                    onsubmit="return false;">
+
+                    <div class="form-group">
+                        <label><b>Select the Company:</b></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-building"></i>
+                            <select class="selectpicker form-control" id="company" name="company" required
+                                onchange="load_car_models()">
+                                <option value="" disabled selected>Select Company</option>
+                                {% for company in companies %}
+                                <option value="{{ company }}">{{ company }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><b>Select the Car Model:</b></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-car"></i>
+                            <select class="selectpicker form-control" id="car_models" name="car_models" required>
+                                <option value="" disabled selected>Select Model</option>
+                                <!-- Models will be populated via JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><b>Select Year of Purchase:</b></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-calendar-alt"></i>
+                            <select class="selectpicker form-control" id="year" name="year" required>
+                                <option value="" disabled selected>Select Year</option>
+                                {% for year in years %}
+                                <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><b>Select the Fuel Type:</b></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-gas-pump"></i>
+                            <select class="selectpicker form-control" id="fuel_type" name="fuel_type" required>
+                                <option value="" disabled selected>Select Fuel Type</option>
+                                {% for fuel in fuel_types %}
+                                <option value="{{ fuel }}">{{ fuel }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><b>Enter the Number of Kilometres that the car has travelled:</b></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <input type="text" class="form-control" id="kilo_driven" name="kilo_driven"
+                                placeholder="Enter the kilometres driven (e.g., 50000)" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button class="btn btn-primary form-control" type="button" onclick="send_data()">Predict
+                            Price</button>
+                    </div>
+                </form>
+
+                <div class="result-area">
+                    <h3><span id="prediction"></span></h3>
+                </div>
+                <!-- Hidden element to pass data to JS -->
+                <div id="data-container" data-models='{{ car_models | tojson | safe }}' style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pass the list of all models to JS safely
+        const dataContainer = document.getElementById('data-container');
+        const all_models = JSON.parse(dataContainer.dataset.models);
+
+        function load_car_models() {
+            var company = document.getElementById("company");
+            var car_model = document.getElementById("car_models");
+
+            var selected_company = company.value;
+
+            // Clear current options
+            car_model.innerHTML = '<option value="" disabled selected>Select Model</option>';
+
+            // Filter models that start with the selected company name
+            // Note: The model strings in the dataset usually start with the company name, e.g., "Audi A3" or "Maruti Suzuki Swift"
+            // We need a robust check. "Maruti" vs "Maruti Suzuki" might be tricky if company is just "Maruti".
+
+            all_models.forEach(function (model) {
+                // Check if the model string contains the company name
+                // Basic contains check:
+                if (model.indexOf(selected_company) !== -1) {
+                    var newOption = document.createElement("option");
+                    newOption.value = model;
+                    newOption.innerHTML = model;
+                    car_model.options.add(newOption);
+                }
+            });
+        }
+
+        function send_data() {
+            // Validate form
+            var form = document.querySelector('form');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            var fd = new FormData(form);
+            var xhr = new XMLHttpRequest();
+
+            xhr.open('POST', '/predict', true);
+            document.getElementById('prediction').innerHTML = "Wait! Predicting Price.....";
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        document.getElementById('prediction').innerHTML = "Prediction: ₹" + xhr.responseText;
+                    } else {
+                        document.getElementById('prediction').innerHTML = "Error: " + xhr.responseText;
+                    }
+                }
+            };
+            xhr.send(fd);
+        }
+    </script>
+</body>
+
+</html>

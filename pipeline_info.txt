@@ -1,0 +1,10 @@
+Model Loaded
+Pipeline Steps: ['columntransformer', 'linearregression']
+Found Transformer Step: columntransformer
+  Transformer: onehotencoder, Columns: ['name', 'company', 'fuel_type']
+    Has categories. Count: 3
+    Category 0 (Length 254): ['Audi A3 Cabriolet', 'Audi A4 1.8', 'Audi A4 2.0']...
+    Category 1 (Length 25): ['Audi', 'BMW', 'Chevrolet']...
+    Category 2 (Length 3): ['Diesel', 'LPG', 'Petrol']...
+  Transformer: remainder, Columns: [2, 3]
+Feature Names In: ['name', 'company', 'year', 'kms_driven', 'fuel_type']
